@@ -141,7 +141,7 @@ function riskDefender(txFrequency, uniqueWallets, clusterScore) {
 #### Interpretation:
 A high number of repetitive transactions between few wallets suggests botnets or market manipulation.
 
-###🍯 CryptoSafe — Honeypot & Exit Trap Detection
+### 🍯 CryptoSafe — Honeypot & Exit Trap Detection
 #### Goal:Detect whether a token is unsellable or hiding exit traps.
 #### How it works- Checks:
 -  If the token can be sold
