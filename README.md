@@ -1,5 +1,3 @@
-# CleoGarda
-The sentinel layer behind CleoGuarda’s watchful eye. This AI framework weaves advanced machine learning with deep-chain analytics to form the backbone of CleoGuarda’s defense grid — powering every token scan, guardian trigger, and pattern alert within the system.
 # 🛡️ CleoGuarda: Blockchain Security & Protection
 
 ## 🔐 Overview
@@ -116,7 +114,7 @@ function guardEye(token) {
 }
 ```
 
-###⚠️ RiskDefender — Transaction Behavior Scoring
+### ⚠️ RiskDefender — Transaction Behavior Scoring
 Goal:
 Evaluate on-chain behavior in real time to detect manipulation and coordinated bot activity.
 
