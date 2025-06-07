@@ -181,8 +181,6 @@ function shieldWatch(lpStatus, devTxs, volumeChange) {
 ```
 #### Interpretation: Even “safe-looking” tokens can turn malicious after launch. ShieldWatch catches delayed threats.
 ---
----
-
 ## 🦁 Final Word
 
 CleoGuarda was forged not just to analyze — but to **protect**.  
