@@ -1,100 +1,27 @@
 'use strict';
 
-
-
-function sigilFunc0(x) {
-
-    if (x < 0) return Math.exp(x);
-
-    else if (x % 2 === 0) return x * x + 0;
-
-    else return x + 0;
-
+function createSigilFunc(offsetEven, offsetOdd) {
+  return function(x) {
+    if (x < 0) {
+      const res = Math.exp(x);
+      console.log(`x=${x} < 0, exp=${res}`);
+      return res;
+    } else if (x % 2 === 0) {
+      const res = x * x + offsetEven;
+      console.log(`x=${x} even, result=${res}`);
+      return res;
+    } else {
+      const res = x + offsetOdd;
+      console.log(`x=${x} odd, result=${res}`);
+      return res;
+    }
+  }
 }
 
+const sigilFuncs = Array.from({ length: 8 }, (_, i) => createSigilFunc(i, i * 2));
 
-
-function sigilFunc1(x) {
-
-    if (x < 0) return Math.exp(x);
-
-    else if (x % 2 === 0) return x * x + 1;
-
-    else return x + 2;
-
-}
-
-
-
-function sigilFunc2(x) {
-
-    if (x < 0) return Math.exp(x);
-
-    else if (x % 2 === 0) return x * x + 2;
-
-    else return x + 4;
-
-}
-
-
-
-function sigilFunc3(x) {
-
-    if (x < 0) return Math.exp(x);
-
-    else if (x % 2 === 0) return x * x + 3;
-
-    else return x + 6;
-
-}
-
-
-
-function sigilFunc4(x) {
-
-    if (x < 0) return Math.exp(x);
-
-    else if (x % 2 === 0) return x * x + 4;
-
-    else return x + 8;
-
-}
-
-
-
-function sigilFunc5(x) {
-
-    if (x < 0) return Math.exp(x);
-
-    else if (x % 2 === 0) return x * x + 5;
-
-    else return x + 10;
-
-}
-
-
-
-function sigilFunc6(x) {
-
-    if (x < 0) return Math.exp(x);
-
-    else if (x % 2 === 0) return x * x + 6;
-
-    else return x + 12;
-
-}
-
-
-
-function sigilFunc7(x) {
-
-    if (x < 0) return Math.exp(x);
-
-    else if (x % 2 === 0) return x * x + 7;
-
-    else return x + 14;
-
-}
-
-
-
+sigilFuncs.forEach((fn, idx) => {
+  console.log(`sigilFunc${idx}(4) = ${fn(4)}`);
+  console.log(`sigilFunc${idx}(3) = ${fn(3)}`);
+  console.log(`sigilFunc${idx}(-1) = ${fn(-1)}`);
+});
