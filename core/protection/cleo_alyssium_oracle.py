@@ -1,100 +1,65 @@
-import json
+#!/usr/bin/env python3
+import os
+import asyncio
+import aiohttp
+import numpy as np
+import pandas as pd
+from sklearn.cluster import DBSCAN
+from datetime import datetime
 
-import time
+API_BASE = os.getenv("API_BASE")
+METRICS_ENDPOINT = f"{API_BASE}/metrics"
+ALERTS_ENDPOINT = f"{API_BASE}/alerts"
+TOKENS_ENDPOINT = f"{API_BASE}/tokens"
+API_KEY = os.getenv("API_KEY", "")
 
-import math
+async def fetch(session, url, params=None):
+    headers = {"Authorization": f"Bearer {API_KEY}"}
+    async with session.get(url, headers=headers, params=params) as r:
+        r.raise_for_status()
+        return await r.json()
 
+async def post(session, url, payload):
+    headers = {"Authorization": f"Bearer {API_KEY}", "Content-Type": "application/json"}
+    async with session.post(url, headers=headers, json=payload) as r:
+        r.raise_for_status()
+        return await r.json()
 
+def df_from(data):
+    df = pd.DataFrame(data)
+    df['ts'] = pd.to_datetime(df['timestamp'])
+    return df.set_index('ts')[['value']]
 
+def features(df):
+    df['delta'] = df['value'].diff().fillna(0)
+    df['rmean'] = df['value'].rolling(10, min_periods=1).mean()
+    df['rstd'] = df['value'].rolling(10, min_periods=1).std().fillna(0)
+    return df.dropna()
 
+def cluster(df):
+    X = df[['value','delta','rstd']].to_numpy()
+    df['cluster'] = DBSCAN(eps=0.5, min_samples=5).fit_predict(X)
+    return df
 
-class WalletAnalyzer:
+def summarize(df):
+    out = {}
+    for c in df['cluster'].unique():
+        g = df[df['cluster']==c]
+        out[int(c)] = {'count':len(g),'mean':float(g['value'].mean()),'std':float(g['delta'].std())}
+    return out
 
-    def __init__(self, address):
+async def integrate():
+    async with aiohttp.ClientSession() as session:
+        metrics = await fetch(session, METRICS_ENDPOINT, params={"limit":1000})
+        tokens = await fetch(session, TOKENS_ENDPOINT)
+        df = df_from(metrics)
+        df = features(df)
+        df = cluster(df)
+        summary = summarize(df)
+        now = datetime.utcnow().isoformat()
+        await post(session, ALERTS_ENDPOINT, {"time":now,"clusters":summary,"tokens":tokens})
+        df.to_csv(f"metrics_{now}.csv")
+        pd.DataFrame([summary]).to_json(f"clusters_{now}.json",orient='records')
 
-        self.address = address
-
-        self.transactions = []
-
-
-
-    def load_transactions(self, tx_list):
-
-        self.transactions = tx_list
-
-
-
-    def detect_anomalies(self):
-
-        return [tx for tx in self.transactions if tx['value'] > 10000]
-
-
-
-
-
-def log_event(event_type, metadata):
-
-    now = datetime.utcnow().isoformat()
-
-    log_entry = {
-
-        "timestamp": now,
-
-        "event": event_type,
-
-        "meta": metadata
-
-    }
-
-    with open("logfile.json", "a") as f:
-
-        f.write(json.dumps(log_entry) + "\n")
-
-
-
-
-
-def classify_token(risk_score):
-
-    if risk_score > 0.8:
-
-        return "High Risk"
-
-    elif risk_score > 0.5:
-
-        return "Moderate Risk"
-
-    else:
-
-        return "Low Risk"
-
-
-
-
-
-def fetch_token_data(api_url):
-
-    try:
-
-        response = requests.get(api_url)
-
-        if response.status_code == 200:
-
-            return response.json()
-
-        else:
-
-            logging.error("API error: %s", response.status_code)
-
-            return None
-
-    except Exception as e:
-
-        logging.error("Exception during fetch: %s", e)
-
-        return None
-
-
-
-
-
+if __name__=="__main__":
+    asyncio.run(integrate())
