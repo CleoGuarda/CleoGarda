@@ -1,99 +1,175 @@
+:root {
+  --bg-color: #0e0e1f;
+  --fg-color: #e0e0e0;
+  --border-color: #444;
+  --accent-color: #1be8a5;
+  --card-bg: rgba(255, 255, 255, 0.02);
+  --btn-bg: rgba(255, 255, 255, 0.05);
+  --btn-hover-bg: rgba(255, 255, 255, 0.1);
+  --transition-speed: 0.3s;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 body {
-  background-color: #0e0e1f;
-  color: #e0e0e0;
-  font-family: 'Segoe UI', sans-serif;
+  margin: 0;
   padding: 20px;
+  background-color: var(--bg-color);
+  color: var(--fg-color);
+  font-family: 'Segoe UI', sans-serif;
+  line-height: 1.6;
 }
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.site-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+}
+
+.site-title {
+  margin: 0;
+  font-size: 1.8rem;
+  letter-spacing: 1px;
+}
+
+.site-nav ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  gap: 1rem;
+}
+
+.site-nav a {
+  color: var(--fg-color);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color var(--transition-speed);
+}
+
+.site-nav a:hover {
+  color: var(--accent-color);
+}
+
+.dashboard-section {
+  margin-bottom: 2rem;
+}
+
 .token-card {
-  border: 1px solid #444;
-  padding: 15px;
-  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--border-color);
+  background: var(--card-bg);
   border-radius: 8px;
+  padding: 15px;
   max-width: 400px;
-  margin: 20px 0;
 }
-.token-name, .token-risk {
-  font-size: 18px;
-  margin: 8px 0;
-}# comment filler line 0
-# comment filler line 1
-# comment filler line 2
-# comment filler line 3
-# comment filler line 4
-# comment filler line 5
-# comment filler line 6
-# comment filler line 7
-# comment filler line 8
-# comment filler line 9
-# comment filler line 10
-# comment filler line 11
-# comment filler line 12
-# comment filler line 13
-# comment filler line 14
-# comment filler line 15
-# comment filler line 16
-# comment filler line 17
-# comment filler line 18
-# comment filler line 19
-# comment filler line 20
-# comment filler line 21
-# comment filler line 22
-# comment filler line 23
-# comment filler line 24
-# comment filler line 25
-# comment filler line 26
-# comment filler line 27
-# comment filler line 28
-# comment filler line 29
-# comment filler line 30
-# comment filler line 31
-# comment filler line 32
-# comment filler line 33
-# comment filler line 34
-# comment filler line 35
-# comment filler line 36
-# comment filler line 37
-# comment filler line 38
-# comment filler line 39
-# comment filler line 40
-# comment filler line 41
-# comment filler line 42
-# comment filler line 43
-# comment filler line 44
-# comment filler line 45
-# comment filler line 46
-# comment filler line 47
-# comment filler line 48
-# comment filler line 49
-# comment filler line 50
-# comment filler line 51
-# comment filler line 52
-# comment filler line 53
-# comment filler line 54
-# comment filler line 55
-# comment filler line 56
-# comment filler line 57
-# comment filler line 58
-# comment filler line 59
-# comment filler line 60
-# comment filler line 61
-# comment filler line 62
-# comment filler line 63
-# comment filler line 64
-# comment filler line 65
-# comment filler line 66
-# comment filler line 67
-# comment filler line 68
-# comment filler line 69
-# comment filler line 70
-# comment filler line 71
-# comment filler line 72
-# comment filler line 73
-# comment filler line 74
-# comment filler line 75
-# comment filler line 76
-# comment filler line 77
-# comment filler line 78
-# comment filler line 79
-# comment filler line 80
-# comment filler line 81
+
+.token-name,
+.token-risk {
+  font-size: 1.125rem;
+  margin: 0.5rem 0;
+}
+
+.token-volume {
+  font-size: 1rem;
+  margin: 0.5rem 0;
+}
+
+.btn {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  background: var(--btn-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background var(--transition-speed), transform var(--transition-speed);
+}
+
+.btn:hover {
+  background: var(--btn-hover-bg);
+  transform: translateY(-2px);
+}
+
+.chart-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 10px;
+  margin-top: 1rem;
+}
+
+.chart-card canvas {
+  width: 100%;
+  height: auto;
+  border-radius: 4px;
+}
+
+.alerts-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.alert-item {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 10px;
+  margin-bottom: 0.5rem;
+}
+
+.settings-form {
+  display: grid;
+  gap: 1rem;
+  max-width: 320px;
+}
+
+.settings-form label {
+  font-size: 0.95rem;
+}
+
+.settings-form input[type="number"],
+.settings-form input[type="range"] {
+  width: 100%;
+  margin-top: 0.25rem;
+}
+
+#risk-threshold-value {
+  display: inline-block;
+  width: 2rem;
+  text-align: center;
+}
+
+.site-footer {
+  text-align: center;
+  padding: 1rem 0;
+  font-size: 0.85rem;
+  border-top: 1px solid var(--border-color);
+  margin-top: 2rem;
+}
+
+@media (max-width: 768px) {
+  .site-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .site-nav ul {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .dashboard-section {
+    padding: 0 10px;
+  }
+}
