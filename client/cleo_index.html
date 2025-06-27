@@ -2,17 +2,80 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>CleoGarda Dashboard</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div id="app">
-    <h1>Welcome to CleoGarda</h1>
-    <div class="token-card">
-      <p class="token-name">Token: <span id="token-name">Loading...</span></p>
-      <p class="token-risk">Risk: <span id="token-risk">Unknown</span></p>
+  <header class="site-header">
+    <div class="container">
+      <h1 class="site-title">CleoGarda AI Dashboard</h1>
+      <nav class="site-nav">
+        <ul>
+          <li><a href="#overview">Overview</a></li>
+          <li><a href="#charts">Charts</a></li>
+          <li><a href="#alerts">Alerts</a></li>
+          <li><a href="#settings">Settings</a></li>
+        </ul>
+      </nav>
     </div>
-  </div>
+  </header>
+
+  <main id="app" class="container">
+    <section id="overview" class="dashboard-section">
+      <h2>Token Overview</h2>
+      <div class="token-card">
+        <p class="token-name">
+          <strong>Token:</strong> <span id="token-name">Loading…</span>
+        </p>
+        <p class="token-risk">
+          <strong>Risk Score:</strong> <span id="token-risk">—</span>
+        </p>
+        <p class="token-volume">
+          <strong>24h Volume:</strong> <span id="token-volume">—</span>
+        </p>
+        <button id="refresh-data" class="btn">Refresh Data</button>
+      </div>
+    </section>
+
+    <section id="charts" class="dashboard-section">
+      <h2>Trend Charts</h2>
+      <div class="chart-card">
+        <canvas id="price-chart" aria-label="Price over time" role="img"></canvas>
+      </div>
+      <div class="chart-card">
+        <canvas id="risk-chart" aria-label="Risk trend" role="img"></canvas>
+      </div>
+    </section>
+
+    <section id="alerts" class="dashboard-section">
+      <h2>Active Alerts</h2>
+      <ul id="alerts-list" class="alerts-list">
+        <li class="alert-item">No active alerts</li>
+      </ul>
+    </section>
+
+    <section id="settings" class="dashboard-section">
+      <h2>Dashboard Settings</h2>
+      <form id="settings-form" class="settings-form">
+        <label for="update-interval">Update Interval (seconds):</label>
+        <input type="number" id="update-interval" name="updateInterval" min="10" value="60">
+        
+        <label for="risk-threshold">Risk Threshold:</label>
+        <input type="range" id="risk-threshold" name="riskThreshold" min="0" max="100" value="75">
+        <span id="risk-threshold-value">75</span>
+
+        <button type="submit" class="btn">Save Settings</button>
+      </form>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <small>&copy; 2025 CleoGarda Labs. All rights reserved.</small>
+    </div>
+  </footer>
+
   <script src="ely_script_dashboard.js"></script>
 </body>
 </html>
