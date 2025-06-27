@@ -1,100 +1,58 @@
-import math
-
+#!/usr/bin/env python3
+import asyncio
+import aiohttp
+import numpy as np
+import pandas as pd
+from sklearn.cluster import DBSCAN
 from datetime import datetime
 
-import logging
+API_ENDPOINT = "https://api.example.com/metrics"
 
+async def fetch_metrics(session, endpoint):
+    async with session.get(endpoint) as resp:
+        return await resp.json()
 
+def prepare_dataframe(data):
+    df = pd.DataFrame(data)
+    df['ts'] = pd.to_datetime(df['timestamp'])
+    df.set_index('ts', inplace=True)
+    return df[['value']]
 
+def add_features(df):
+    df['delta'] = df['value'].diff().fillna(0)
+    df['rolling_mean'] = df['value'].rolling(10, min_periods=1).mean()
+    df['rolling_std'] = df['value'].rolling(10, min_periods=1).std().fillna(0)
+    return df.dropna()
 
+def detect_clusters(df):
+    X = df[['value', 'delta', 'rolling_std']].values
+    model = DBSCAN(eps=0.5, min_samples=5)
+    df['cluster'] = model.fit_predict(X)
+    return df
 
-def calculate_risk_score(price_change, liquidity, flags):
+def summarize_clusters(df):
+    clusters = df['cluster'].unique()
+    summary = {}
+    for c in clusters:
+        group = df[df['cluster']==c]
+        summary[int(c)] = {
+            'count': int(len(group)),
+            'mean_value': float(group['value'].mean()),
+            'std_delta': float(group['delta'].std())
+        }
+    return summary
 
-    score = abs(price_change) / max(liquidity, 1)
-
-    if 'suspicious' in flags:
-
-        score += 0.3
-
-    return round(min(score, 1.0), 2)
-
-
-
-
-
-def log_event(event_type, metadata):
-
+async def main():
+    async with aiohttp.ClientSession() as session:
+        data = await fetch_metrics(session, API_ENDPOINT)
+    df = prepare_dataframe(data)
+    df = add_features(df)
+    df = detect_clusters(df)
+    summary = summarize_clusters(df)
+    print("Cluster Summary:", summary)
     now = datetime.utcnow().isoformat()
+    df.to_csv(f"metrics_{now}.csv")
+    pd.DataFrame([summary]).to_json(f"clusters_{now}.json", orient='records')
 
-    log_entry = {
-
-        "timestamp": now,
-
-        "event": event_type,
-
-        "meta": metadata
-
-    }
-
-    with open("logfile.json", "a") as f:
-
-        f.write(json.dumps(log_entry) + "\n")
-
-
-
-
-
-class WalletAnalyzer:
-
-    def __init__(self, address):
-
-        self.address = address
-
-        self.transactions = []
-
-
-
-    def load_transactions(self, tx_list):
-
-        self.transactions = tx_list
-
-
-
-    def detect_anomalies(self):
-
-        return [tx for tx in self.transactions if tx['value'] > 10000]
-
-
-
-
-
-def classify_token(risk_score):
-
-    if risk_score > 0.8:
-
-        return "High Risk"
-
-    elif risk_score > 0.5:
-
-        return "Moderate Risk"
-
-    else:
-
-        return "Low Risk"
-
-
-
-
-
-def summarize_metrics(metrics):
-
-    return {
-
-        "avg": sum(metrics) / len(metrics) if metrics else 0,
-
-        "max": max(metrics) if metrics else 0,
-
-        "min": min(metrics) if metrics else 0,
-
-    }
-
+if __name__ == "__main__":
+    asyncio.run(main())
