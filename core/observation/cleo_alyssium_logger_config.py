@@ -1,92 +1,155 @@
-import requests
-import logging
-import json
+#!/usr/bin/env python3
+import os
+import sqlite3
+import threading
+import time
 from datetime import datetime
+from typing import List, Tuple
 
-def log_event(event_type, metadata):
-    now = datetime.utcnow().isoformat()
-    log_entry = {
-        "timestamp": now,
-        "event": event_type,
-        "meta": metadata
-    }
-    with open("logfile.json", "a") as f:
-        f.write(json.dumps(log_entry) + "\n")
+import pandas as pd
+import requests
+import websocket
 
-def calculate_risk_score(price_change, liquidity, flags):
-    score = abs(price_change) / max(liquidity, 1)
-    if 'suspicious' in flags:
-        score += 0.3
-    if 'blacklisted' in flags:
-        score += 0.4
-    if 'honeypot' in flags:
-        score += 0.25
-    return round(min(score, 1.0), 3)
 
-def fetch_token_data(api_url, timeout=10):
+# ─── Database Utilities ────────────────────────────────────────────────────────
+DB_PATH = "market_data.db"
+
+
+def init_db(path: str = DB_PATH) -> None:
+    """Initialize SQLite database and tables."""
+    conn = sqlite3.connect(path)
+    c = conn.cursor()
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS prices (
+            timestamp TEXT PRIMARY KEY,
+            open REAL, high REAL, low REAL, close REAL, volume REAL
+        )
+    """)
+    conn.commit()
+    conn.close()
+
+
+def insert_price(record: Tuple[str, float, float, float, float, float], path: str = DB_PATH) -> None:
+    """Insert one OHLCV record into the database."""
+    conn = sqlite3.connect(path)
+    c = conn.cursor()
+    c.execute("""
+        INSERT OR REPLACE INTO prices(timestamp, open, high, low, close, volume)
+        VALUES (?, ?, ?, ?, ?, ?)
+    """, record)
+    conn.commit()
+    conn.close()
+
+
+# ─── Data Fetching & Indicators ───────────────────────────────────────────────
+def fetch_historical(symbol: str, interval: str = "1h") -> pd.DataFrame:
+    """
+    Fetch historical OHLCV data via REST API.
+    Returns pandas DataFrame indexed by timestamp.
+    """
+    url = f"https://api.example.com/ohlcv/{symbol}/{interval}"
+    resp = requests.get(url, timeout=10)
+    resp.raise_for_status()
+    df = pd.DataFrame(resp.json())
+    df["timestamp"] = pd.to_datetime(df["timestamp"])
+    df.set_index("timestamp", inplace=True)
+    return df[["open", "high", "low", "close", "volume"]]
+
+
+def ema(series: pd.Series, span: int) -> pd.Series:
+    """Compute exponential moving average."""
+    return series.ewm(span=span, adjust=False).mean()
+
+
+def rsi(series: pd.Series, period: int = 14) -> pd.Series:
+    """Compute Relative Strength Index."""
+    delta = series.diff().dropna()
+    up = delta.clip(lower=0).rolling(period).mean()
+    down = -delta.clip(upper=0).rolling(period).mean()
+    rs = up / down
+    return 100 - (100 / (1 + rs))
+
+
+def macd(series: pd.Series, fast: int = 12, slow: int = 26, signal: int = 9) -> pd.DataFrame:
+    """Compute MACD and signal line."""
+    fast_ema = ema(series, fast)
+    slow_ema = ema(series, slow)
+    macd_line = fast_ema - slow_ema
+    signal_line = ema(macd_line, signal)
+    histogram = macd_line - signal_line
+    return pd.DataFrame({
+        "macd": macd_line,
+        "signal": signal_line,
+        "histogram": histogram
+    })
+
+
+# ─── Live WebSocket Feed ───────────────────────────────────────────────────────
+class LiveTicker:
+    def __init__(self, symbol: str):
+        self.symbol = symbol
+        self.ws_url = f"wss://stream.example.com/{symbol}@trade"
+        self.ws: websocket.WebSocketApp = websocket.WebSocketApp(
+            self.ws_url,
+            on_message=self.on_message,
+            on_error=self.on_error,
+            on_close=self.on_close
+        )
+
+    def on_message(self, ws, message):
+        data = pd.json.loads(message)
+        ts = datetime.utcfromtimestamp(data["T"] / 1000).isoformat()
+        price = float(data["p"])
+        volume = float(data["q"])
+        record = (ts, price, price, price, price, volume)
+        insert_price(record)
+        print(f"[{ts}] Live price: {price}")
+
+    def on_error(self, ws, error):
+        print("WebSocket error:", error)
+
+    def on_close(self, ws, close_status_code, close_msg):
+        print("WebSocket closed:", close_status_code, close_msg)
+
+    def run(self):
+        self.ws.run_forever()
+
+
+# ─── Scheduler ────────────────────────────────────────────────────────────────
+def schedule_live_feed(symbol: str):
+    """Start live feed in a background thread."""
+    ticker = LiveTicker(symbol)
+    thread = threading.Thread(target=ticker.run, daemon=True)
+    thread.start()
+
+
+# ─── Main Workflow ────────────────────────────────────────────────────────────
+if __name__ == "__main__":
+    init_db()
+
+    # Historical analysis
+    symbol = os.getenv("TOKEN_SYMBOL", "ABCUSD")
+    df = fetch_historical(symbol)
+    df["ema_20"] = ema(df["close"], 20)
+    df["rsi_14"] = rsi(df["close"], 14)
+    indicators = macd(df["close"])
+    print("Latest indicators:")
+    print(indicators.tail(3))
+
+    # Store historical into DB
+    for ts, row in df.iterrows():
+        record = (
+            ts.isoformat(),
+            row.open, row.high, row.low, row.close, row.volume
+        )
+        insert_price(record)
+
+    # Start live feed
+    schedule_live_feed(symbol)
+
+    # Keep main thread alive
     try:
-        response = requests.get(api_url, timeout=timeout)
-        if response.status_code == 200:
-            return response.json()
-        else:
-            logging.error("API error: %s", response.status_code)
-            return None
-    except Exception as e:
-        logging.error("Exception during fetch: %s", e)
-        return None
-
-def summarize_metrics(metrics):
-    if not metrics:
-        return {"avg": 0, "max": 0, "min": 0, "median": 0, "std_dev": 0}
-    import numpy as np
-    metrics_np = np.array(metrics)
-    return {
-        "avg": float(np.mean(metrics_np)),
-        "max": float(np.max(metrics_np)),
-        "min": float(np.min(metrics_np)),
-        "median": float(np.median(metrics_np)),
-        "std_dev": float(np.std(metrics_np))
-    }
-
-class WalletAnalyzer:
-    def __init__(self, address):
-        self.address = address
-        self.transactions = []
-        self.anomalies = []
-
-    def load_transactions(self, tx_list):
-        if not isinstance(tx_list, list):
-            raise ValueError("Transactions must be provided as a list")
-        self.transactions = tx_list
-
-    def detect_anomalies(self, threshold=10000):
-        self.anomalies = [tx for tx in self.transactions if tx.get('value', 0) > threshold]
-        log_event("Anomalies detected", {"address": self.address, "count": len(self.anomalies)})
-        return self.anomalies
-
-    def total_volume(self):
-        total = sum(tx.get('value', 0) for tx in self.transactions)
-        return total
-
-    def average_transaction_value(self):
-        if not self.transactions:
-            return 0
-        return self.total_volume() / len(self.transactions)
-
-    def transactions_per_day(self):
-        from datetime import datetime
-        if not self.transactions:
-            return 0
-        dates = []
-        for tx in self.transactions:
-            ts = tx.get('timestamp')
-            if ts:
-                try:
-                    dt = datetime.fromisoformat(ts)
-                    dates.append(dt.date())
-                except Exception:
-                    continue
-        if not dates:
-            return 0
-        days_span = (max(dates) - min(dates)).days or 1
-        return len(self.transactions) / days_span
+        while True:
+            time.sleep(60)
+    except KeyboardInterrupt:
+        print("Exiting...")
