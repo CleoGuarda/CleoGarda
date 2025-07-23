@@ -3,14 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>CleoGarda Dashboard</title>
+  <title>CleoGarda AI Dashboard</title>
   <link rel="stylesheet" href="style.css">
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-  <header class="site-header">
+  <a class="skip-link" href="#main-content">Skip to content</a>
+
+  <header class="site-header" role="banner">
     <div class="container">
       <h1 class="site-title">CleoGarda AI Dashboard</h1>
-      <nav class="site-nav">
+      <nav class="site-nav" role="navigation" aria-label="Main">
         <ul>
           <li><a href="#overview">Overview</a></li>
           <li><a href="#charts">Charts</a></li>
@@ -21,19 +26,13 @@
     </div>
   </header>
 
-  <main id="app" class="container">
+  <main id="main-content" class="container" role="main">
     <section id="overview" class="dashboard-section">
       <h2>Token Overview</h2>
       <div class="token-card">
-        <p class="token-name">
-          <strong>Token:</strong> <span id="token-name">Loading…</span>
-        </p>
-        <p class="token-risk">
-          <strong>Risk Score:</strong> <span id="token-risk">—</span>
-        </p>
-        <p class="token-volume">
-          <strong>24h Volume:</strong> <span id="token-volume">—</span>
-        </p>
+        <p><strong>Token:</strong> <span id="token-name">Loading…</span></p>
+        <p><strong>Risk Score:</strong> <span id="token-risk">—</span></p>
+        <p><strong>24h Volume:</strong> <span id="token-volume">—</span></p>
         <button id="refresh-data" class="btn">Refresh Data</button>
       </div>
     </section>
@@ -48,7 +47,7 @@
       </div>
     </section>
 
-    <section id="alerts" class="dashboard-section">
+    <section id="alerts" class="dashboard-section" aria-live="polite">
       <h2>Active Alerts</h2>
       <ul id="alerts-list" class="alerts-list">
         <li class="alert-item">No active alerts</li>
@@ -58,23 +57,131 @@
     <section id="settings" class="dashboard-section">
       <h2>Dashboard Settings</h2>
       <form id="settings-form" class="settings-form">
-        <label for="update-interval">Update Interval (seconds):</label>
-        <input type="number" id="update-interval" name="updateInterval" min="10" value="60">
-        
-        <label for="risk-threshold">Risk Threshold:</label>
-        <input type="range" id="risk-threshold" name="riskThreshold" min="0" max="100" value="75">
-        <span id="risk-threshold-value">75</span>
+        <div class="form-group">
+          <label for="update-interval">Update Interval (seconds):</label>
+          <input 
+            type="number" 
+            id="update-interval" 
+            name="updateInterval" 
+            min="10" 
+            value="60" 
+            required
+          >
+        </div>
+
+        <div class="form-group">
+          <label for="risk-threshold">Risk Threshold:</label>
+          <input 
+            type="range" 
+            id="risk-threshold" 
+            name="riskThreshold" 
+            min="0" 
+            max="100" 
+            value="75"
+          >
+          <output id="risk-threshold-value">75</output>
+        </div>
 
         <button type="submit" class="btn">Save Settings</button>
       </form>
     </section>
   </main>
 
-  <footer class="site-footer">
+  <footer class="site-footer" role="contentinfo">
     <div class="container">
       <small>&copy; 2025 CleoGarda Labs. All rights reserved.</small>
     </div>
   </footer>
+
+  <script>
+    // DOM references
+    const refreshBtn = document.getElementById('refresh-data');
+    const intervalInput = document.getElementById('update-interval');
+    const thresholdInput = document.getElementById('risk-threshold');
+    const thresholdOutput = document.getElementById('risk-threshold-value');
+    const nameEl = document.getElementById('token-name');
+    const riskEl = document.getElementById('token-risk');
+    const volumeEl = document.getElementById('token-volume');
+    const alertsList = document.getElementById('alerts-list');
+
+    // Chart instances
+    let priceChart, riskChart;
+
+    // Initialize charts with empty data
+    function initCharts() {
+      const priceCtx = document.getElementById('price-chart').getContext('2d');
+      const riskCtx  = document.getElementById('risk-chart').getContext('2d');
+
+      priceChart = new Chart(priceCtx, {
+        type: 'line',
+        data: { labels: [], datasets: [{ label: 'Price', data: [] }] },
+        options: { responsive: true }
+      });
+
+      riskChart = new Chart(riskCtx, {
+        type: 'line',
+        data: { labels: [], datasets: [{ label: 'Risk Score', data: [] }] },
+        options: { responsive: true }
+      });
+    }
+
+    // Fetch and render data
+    async function fetchData() {
+      try {
+        const res = await fetch('/api/token-data');
+        const { name, riskScore, volume, history } = await res.json();
+
+        nameEl.textContent = name;
+        riskEl.textContent = riskScore.toFixed(1);
+        volumeEl.textContent = volume.toLocaleString();
+
+        // Update charts
+        priceChart.data.labels = history.map(h => h.time);
+        priceChart.data.datasets[0].data = history.map(h => h.price);
+        priceChart.update();
+
+        riskChart.data.labels = history.map(h => h.time);
+        riskChart.data.datasets[0].data = history.map(h => h.risk);
+        riskChart.update();
+
+        // Alerts
+        alertsList.innerHTML = '';
+        history.filter(h => h.risk >= +thresholdInput.value)
+               .forEach(h => {
+          const li = document.createElement('li');
+          li.className = 'alert-item';
+          li.textContent = `${h.time}: risk ${h.risk}`;
+          alertsList.appendChild(li);
+        });
+        if (!alertsList.hasChildNodes()) {
+          alertsList.innerHTML = '<li class="alert-item">No active alerts</li>';
+        }
+      } catch (err) {
+        console.error('Data fetch error', err);
+      }
+    }
+
+    // Wire up controls
+    thresholdInput.addEventListener('input', () => {
+      thresholdOutput.value = thresholdInput.value;
+      fetchData();
+    });
+
+    document.getElementById('settings-form').addEventListener('submit', e => {
+      e.preventDefault();
+      clearInterval(window.autoRefresh);
+      window.autoRefresh = setInterval(fetchData, +intervalInput.value * 1000);
+    });
+
+    refreshBtn.addEventListener('click', fetchData);
+
+    // Startup
+    document.addEventListener('DOMContentLoaded', () => {
+      initCharts();
+      fetchData();
+      window.autoRefresh = setInterval(fetchData, +intervalInput.value * 1000);
+    });
+  </script>
 
   <script src="ely_script_dashboard.js"></script>
 </body>
