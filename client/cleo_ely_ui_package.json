@@ -4,15 +4,17 @@
   "description": "Frontend for CleoGarda AI-driven risk visualization dashboard",
   "private": true,
   "scripts": {
-    "build": "tsc --project tsconfig.json",
-    "start": "live-server --open=public/index.html --watch=public,dist",
     "clean": "rimraf dist",
+    "typecheck": "tsc --noEmit",
     "lint": "eslint \"src/**/*.{ts,tsx,js,jsx}\" --fix",
     "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css,md}\"",
+    "build": "npm run typecheck && tsc --project tsconfig.json",
+    "start": "npm run build && live-server --open=public/index.html --watch=public,dist",
     "test": "jest --coverage",
+    "check": "npm run lint && npm run typecheck && npm run test",
     "prepare": "husky install",
     "precommit": "lint-staged",
-    "ci": "npm run clean && npm run lint && npm run build && npm run test"
+    "ci": "npm run clean && npm run check && npm run build"
   },
   "dependencies": {
     "axios": "^1.4.0",
