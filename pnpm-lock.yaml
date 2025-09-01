@@ -2,15 +2,11 @@ lockfileVersion: '9.1'
 
 settings:
   autoInstallPeers: true
-  excludeLinksFromLockfile: false
+  excludeLinksFromLockfile: true
 
 importers:
   .:
     specifiers:
-      '@0x/contract-addresses': ^8.13.0
-      '@0x/protocol-utils': ^11.24.2
-      '@0x/swap-ts-sdk': 2.1.1
-      '@0x/utils': ^7.0.0
       '@ai-sdk/anthropic': ^1.1.4
       '@ai-sdk/deepseek': ^0.1.5
       '@ai-sdk/google': ^1.1.4
@@ -19,8 +15,6 @@ importers:
       '@azure/cosmos': ^4.2.0
       '@azure/search-documents': ^12.1.0
       '@azure/storage-blob': ^12.26.0
-      '@coinbase/coinbase-sdk': ^0.13.0
-      '@ethersproject/bignumber': ^5.8.0
       '@hellomoon/api': ^1.23.2
       '@jup-ag/api': ^6.0.40
       '@jup-ag/core': 4.0.0-beta.21
@@ -33,7 +27,6 @@ importers:
       '@privy-io/server-auth': ^1.17.2
       '@project-serum/anchor': ^0.26.0
       '@radix-ui/react-*': ^1.1.0
-      '@raydium-io/raydium-sdk-v2': 0.1.101-alpha
       '@solana/spl-token': ^0.4.0
       '@solana/web3.js': ^1.98.0
       '@streamflow/stream': ^7.2.0
@@ -42,8 +35,6 @@ importers:
       '@vercel/analytics': ^1.4.1
       '@vercel/speed-insights': ^1.2.0
       '@xyflow/react': ^12.3.6
-      abitype: ^1.0.8
-      add: ^2.0.6
       ai: ^4.1.7
       axios: ^1.7.9
       better-sqlite3: ^11.8.1
@@ -57,7 +48,6 @@ importers:
       decimal.js: ^10.4.3
       dlx: ^0.2.1
       drizzle-orm: ^0.29.3
-      ethers: ^6.13.4
       framer-motion: ^12.4.3
       helius-sdk: ^1.4.1
       jsbi: ^4.3.0
@@ -65,7 +55,6 @@ importers:
       leva: ^0.9.35
       lightweight-charts: ^4.2.2
       lucide-react: ^0.469.0
-      moralis: ^2.27.2
       motion: ^11.15.0
       next: 15.1.2
       next-auth: ^4.24.11
@@ -88,10 +77,6 @@ importers:
       twitter-api-v2: ^1.19.0
 
     dependencies:
-      '@0x/contract-addresses': 8.13.0
-      '@0x/protocol-utils': 11.24.2
-      '@0x/swap-ts-sdk': 2.1.1
-      '@0x/utils': 7.0.0
       '@ai-sdk/anthropic': 1.1.4
       '@ai-sdk/deepseek': 0.1.5
       '@ai-sdk/google': 1.1.4
@@ -100,8 +85,6 @@ importers:
       '@azure/cosmos': 4.2.0
       '@azure/search-documents': 12.1.0
       '@azure/storage-blob': 12.26.0
-      '@coinbase/coinbase-sdk': 0.13.0
-      '@ethersproject/bignumber': 5.8.0
       '@hellomoon/api': 1.23.2
       '@jup-ag/api': 6.0.40
       '@jup-ag/core': 4.0.0-beta.21
@@ -128,7 +111,6 @@ importers:
       '@radix-ui/react-slot': 1.1.1
       '@radix-ui/react-tabs': 1.1.2
       '@radix-ui/react-tooltip': 1.1.6
-      '@raydium-io/raydium-sdk-v2': 0.1.101-alpha
       '@solana/spl-token': 0.4.0
       '@solana/web3.js': 1.98.0
       '@streamflow/stream': 7.2.0
@@ -137,8 +119,6 @@ importers:
       '@vercel/analytics': 1.4.1
       '@vercel/speed-insights': 1.2.0
       '@xyflow/react': 12.3.6
-      abitype: 1.0.8
-      add: 2.0.6
       ai: 4.1.7
       axios: 1.7.9
       better-sqlite3: 11.8.1
@@ -152,7 +132,6 @@ importers:
       decimal.js: 10.4.3
       dlx: 0.2.1
       drizzle-orm: 0.29.3
-      ethers: 6.13.4
       framer-motion: 12.4.3
       helius-sdk: 1.4.1
       jsbi: 4.3.0
@@ -160,7 +139,6 @@ importers:
       leva: 0.9.35
       lightweight-charts: 4.2.2
       lucide-react: 0.469.0
-      moralis: 2.27.2
       motion: 11.15.0
       next: 15.1.2
       next-auth: 4.24.11
