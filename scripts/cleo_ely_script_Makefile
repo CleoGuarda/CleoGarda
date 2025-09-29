@@ -1,14 +1,47 @@
-.PHONY: install test clean run
+.PHONY: install test run clean lint format help
+
+# Default Python interpreter
+PYTHON := python3
+PIP := pip3
+
+# Requirements file
+REQS := requirements.txt
+
+# -------------------------------------
+# Basic tasks
+# -------------------------------------
 
 install:
-	pip install -r requirements.txt
+	$(PIP) install -r $(REQS)
 
 test:
-	pytest tests/
+	pytest -v --maxfail=1 --disable-warnings -q
 
 run:
-	python main.py
+	$(PYTHON) main.py
 
 clean:
 	find . -type f -name '*.pyc' -delete
-	find . -type d -name '__pycache__' -delete
+	find . -type f -name '*.pyo' -delete
+	find . -type f -name '*.coverage' -delete
+	find . -type d -name '__pycache__' -exec rm -rf {} +
+
+# -------------------------------------
+# Dev utilities
+# -------------------------------------
+
+lint:
+	flake8 src tests
+
+format:
+	black src tests
+
+help:
+	@echo "Available commands:"
+	@echo "  make install   - Install dependencies"
+	@echo "  make test      - Run pytest suite"
+	@echo "  make run       - Run main program"
+	@echo "  make clean     - Remove cache and build artifacts"
+	@echo "  make lint      - Run flake8 linter"
+	@echo "  make format    - Auto-format code with black"
+	@echo "  make help      - Show this help"
